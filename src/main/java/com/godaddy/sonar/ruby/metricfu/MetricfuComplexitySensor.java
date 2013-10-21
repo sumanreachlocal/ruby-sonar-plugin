@@ -8,9 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.Sensor;
 import org.sonar.api.batch.SensorContext;
+import org.sonar.api.component.ResourcePerspectives;
+import org.sonar.api.issue.Issuable;
+import org.sonar.api.issue.Issue;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.PersistenceMode;
 import org.sonar.api.resources.Project;
+import org.sonar.api.rule.RuleKey;
 import org.sonar.api.scan.filesystem.FileQuery;
 import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import org.sonar.api.measures.RangeDistributionBuilder;
@@ -26,11 +30,13 @@ public class MetricfuComplexitySensor implements Sensor
     private ModuleFileSystem moduleFileSystem;
     private static final Number[] FILES_DISTRIB_BOTTOM_LIMITS = { 0, 5, 10, 20, 30, 60, 90 };
     private static final Number[] FUNCTIONS_DISTRIB_BOTTOM_LIMITS = { 1, 2, 4, 6, 8, 10, 12, 20, 30 };
+    private final ResourcePerspectives perspectives;
 
-    public MetricfuComplexitySensor(ModuleFileSystem moduleFileSystem, MetricfuComplexityYamlParser metricfuComplexityYamlParser)
+    public MetricfuComplexitySensor(ModuleFileSystem moduleFileSystem, MetricfuComplexityYamlParser metricfuComplexityYamlParser, ResourcePerspectives p)
     {
         this.moduleFileSystem = moduleFileSystem;
         this.metricfuComplexityYamlParser = metricfuComplexityYamlParser;
+        this.perspectives = p;
     }
 
     public boolean shouldExecuteOnProject(Project project)
@@ -93,4 +99,42 @@ public class MetricfuComplexitySensor implements Sensor
         }
         sensorContext.saveMeasure(resource, functionDistribution.build().setPersistenceMode(PersistenceMode.MEMORY));
     }
+    
+    @SuppressWarnings("unchecked")
+    private boolean addIssue(SensorContext context, RubyFile myResource, String ruleRepo, String ruleKey, String messageDescription, String severity) {   
+		
+		boolean flag = false;
+		Issuable issuable = null;
+		Issue issue = null;
+		
+		//Create issuable object.
+    	try{
+    		issuable = perspectives.as(Issuable.class, myResource);
+    	}catch(Exception e){
+    		LOG.error("Can not create object of Issuable " + e.getMessage());
+    	}
+		
+    	//Create new issue.
+		try{
+			issue = issuable.newIssueBuilder()
+		               .ruleKey(RuleKey.of(ruleRepo, ruleKey))
+		               .message(messageDescription)
+		               .severity(severity)
+		               .build();
+			LOG.info("Issue Object : " + issue.toString());
+		}catch(Exception e){
+			LOG.error("Error in create issu object" + e.getMessage());	
+		}
+		
+		//Register new Issue.
+		try{
+			flag = issuable.addIssue(issue);
+			LOG.info("Issue is registered in the context successfully.");
+		}catch(Exception e){
+			LOG.error("Error in create issue object" + e.getMessage());
+		}
+		
+		//Return.
+		return flag;
+	}
 }

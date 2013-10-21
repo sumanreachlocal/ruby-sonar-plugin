@@ -68,6 +68,11 @@
 			<version>2.2.1</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.codehaus.sonar</groupId>
+			<artifactId>sonar-plugin-api</artifactId>
+			<version>3.7</version>
+		</dependency>
 			
 	</dependencies>
 

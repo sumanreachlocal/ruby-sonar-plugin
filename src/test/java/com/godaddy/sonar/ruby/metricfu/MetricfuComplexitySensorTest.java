@@ -2,17 +2,22 @@ package com.godaddy.sonar.ruby.metricfu;
 
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.commons.configuration.Configuration;
 import org.easymock.EasyMock;
+
 import static org.easymock.EasyMock.isA;
+
 import org.easymock.IMocksControl;
 import org.junit.Before;
 import org.junit.Test;
 import org.sonar.api.batch.SensorContext;
+import org.sonar.api.component.ResourcePerspectives;
 import org.sonar.api.measures.Measure;
 import org.sonar.api.measures.Metric;
 import org.sonar.api.resources.Project;
@@ -30,6 +35,7 @@ public class MetricfuComplexitySensorTest
 	private SensorContext sensorContext;
 	private MetricfuComplexityYamlParser metricfuComplexityYamlParser;
 	private MetricfuComplexitySensor metricfuComplexitySensor;
+	private ResourcePerspectives resourcePerspectives;
 	private Configuration config;
 	private Project project;
 
@@ -40,7 +46,7 @@ public class MetricfuComplexitySensorTest
 		moduleFileSystem = mocksControl.createMock(ModuleFileSystem.class);
 		metricfuComplexityYamlParser = mocksControl.createMock(MetricfuComplexityYamlParser.class);
 		
-		metricfuComplexitySensor = new MetricfuComplexitySensor(moduleFileSystem, metricfuComplexityYamlParser);
+		metricfuComplexitySensor = new MetricfuComplexitySensor(moduleFileSystem, metricfuComplexityYamlParser,resourcePerspectives);
 		config = mocksControl.createMock(Configuration.class);
 		expect(config.getString("sonar.language", "java")).andStubReturn("ruby");
 
